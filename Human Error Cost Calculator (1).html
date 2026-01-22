@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Error Cost Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #2d2d2d 0%, #3a3a3a 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #f5f5f5;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%),
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400"><defs><pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="%23d4af37" stroke-width="0.5" opacity="0.1"/></pattern><pattern id="circuit" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="2" fill="%23d4af37" opacity="0.15"/><circle cx="90" cy="90" r="2" fill="%23d4af37" opacity="0.15"/><line x1="10" y1="10" x2="90" y2="90" stroke="%23d4af37" stroke-width="0.5" opacity="0.1"/></pattern></defs><rect width="1200" height="400" fill="%231a1a1a"/><rect width="1200" height="400" fill="url(%23grid)"/><rect width="1200" height="400" fill="url(%23circuit)"/><g opacity="0.05"><rect x="100" y="50" width="80" height="120" fill="%23d4af37"/><rect x="300" y="80" width="100" height="150" fill="%23d4af37"/><rect x="600" y="40" width="120" height="180" fill="%23d4af37"/></g></svg>');
+            background-size: cover, cover;
+            background-position: center, center;
+            background-blend-mode: overlay;
+            color: white;
+            padding: 50px 30px;
+            text-align: center;
+            position: relative;
+            border-bottom: 3px solid #d4af37;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.02) 100%);
+            pointer-events: none;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 1;
+            color: #f0d788;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #2d2d2d;
+        }
+
+        .form-group select {
+            padding: 12px 15px;
+            font-size: 1em;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-group select:hover {
+            border-color: #d4af37;
+        }
+
+        .form-group select:focus {
+            outline: none;
+            border-color: #d4af37;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+        }
+
+        .results-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+        }
+
+        .results-title {
+            font-size: 1.8em;
+            color: #2d2d2d;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .total-cost-box {
+            background: linear-gradient(135deg, #2d2d2d 0%, #3a3a3a 100%);
+            border: 2px solid #d4af37;
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .total-cost-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .total-cost-value {
+            font-size: 3em;
+            font-weight: 700;
+        }
+
+        .percentage-of-revenue {
+            font-size: 0.95em;
+            opacity: 0.85;
+            margin-top: 10px;
+        }
+
+        .cost-breakdown {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .cost-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .cost-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.15);
+        }
+
+        .cost-item-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .cost-item-value {
+            font-size: 1.8em;
+            color: #d4af37;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .cost-item-percent {
+            font-size: 0.85em;
+            color: #999;
+        }
+
+        .reference-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .reference-box {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 25px;
+        }
+
+        .reference-title {
+            font-size: 1.4em;
+            color: #2d2d2d;
+            margin-bottom: 20px;
+            font-weight: 600;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #d4af37;
+        }
+
+        .root-cause-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .root-cause-item:last-child {
+            border-bottom: none;
+        }
+
+        .root-cause-label {
+            font-size: 0.95em;
+            color: #333;
+            flex: 1;
+        }
+
+        .root-cause-percentage {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #d4af37;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .roi-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border-left: 4px solid #d4af37;
+        }
+
+        .roi-item-name {
+            font-weight: 600;
+            color: #2d2d2d;
+            font-size: 0.95em;
+            margin-bottom: 6px;
+        }
+
+        .roi-item-details {
+            font-size: 0.85em;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .roi-highlight {
+            color: #d4af37;
+            font-weight: 600;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .footer p {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .input-section {
+                grid-template-columns: 1fr;
+            }
+
+            .cost-breakdown {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .reference-section {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .total-cost-value {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header" style="background-image: linear-gradient(135deg, rgba(26, 26, 26, 0.75) 0%, rgba(45, 45, 45, 0.75) 100%), url('https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1200&h=400&fit=crop'); background-size: cover; background-position: center;">
+            <h1>Human Error Cost Calculator</h1>
+            <p>Estimate the financial impact of human error in your manufacturing facility</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <div class="form-group">
+                    <label for="facilitySize">Facility Size (Employees)</label>
+                    <select id="facilitySize">
+                        <option value="">-- Select Facility Size --</option>
+                        <option value="small">10-50 Employees ($2-5M Revenue)</option>
+                        <option value="midSmall">50-100 Employees ($5-15M Revenue)</option>
+                        <option value="midLarge">100-500 Employees ($15-50M Revenue)</option>
+                        <option value="large">500-1,000 Employees ($50-150M Revenue)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="industry">Industry</label>
+                    <select id="industry">
+                        <option value="">-- Select Industry --</option>
+                        <option value="automotive">Automotive</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="chemical">Chemical & Plastic</option>
+                        <option value="food">Food & Beverage</option>
+                        <option value="consumer">Consumer Goods</option>
+                        <option value="hightech">High-Tech</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-title">Your Annual Human Error Cost Estimate</div>
+
+                <div class="total-cost-box">
+                    <div class="total-cost-label">Annual Cost of Human Error</div>
+                    <div class="total-cost-value" id="totalCost">$0</div>
+                    <div class="percentage-of-revenue" id="percentRevenue">0% of annual revenue</div>
+                </div>
+
+                <div class="cost-breakdown">
+                    <div class="cost-item">
+                        <div class="cost-item-label">Downtime Costs</div>
+                        <div class="cost-item-value" id="downtimeCost">$0</div>
+                        <div class="cost-item-percent">(40%)</div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-item-label">Rework & Scrap</div>
+                        <div class="cost-item-value" id="reworkCost">$0</div>
+                        <div class="cost-item-percent">(35%)</div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-item-label">Product Recalls</div>
+                        <div class="cost-item-value" id="recallCost">$0</div>
+                        <div class="cost-item-percent">(15%)</div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-item-label">Lost Product</div>
+                        <div class="cost-item-value" id="lossCost">$0</div>
+                        <div class="cost-item-percent">(10%)</div>
+                    </div>
+                </div>
+
+                <div class="reference-section">
+                    <div class="reference-box">
+                        <div class="reference-title">Root Cause of Human Error</div>
+                        <div class="root-cause-item">
+                            <div class="root-cause-label">Stress/Fatigue/Repetition</div>
+                            <div class="root-cause-percentage">48.8%</div>
+                        </div>
+                        <div class="root-cause-item">
+                            <div class="root-cause-label">Inadequate Training</div>
+                            <div class="root-cause-percentage">20.0%</div>
+                        </div>
+                        <div class="root-cause-item">
+                            <div class="root-cause-label">Poor Work Environment</div>
+                            <div class="root-cause-percentage">15.0%</div>
+                        </div>
+                        <div class="root-cause-item">
+                            <div class="root-cause-label">Communication Failures</div>
+                            <div class="root-cause-percentage">10.0%</div>
+                        </div>
+                        <div class="root-cause-item">
+                            <div class="root-cause-label">Equipment Issues</div>
+                            <div class="root-cause-percentage">6.2%</div>
+                        </div>
+                    </div>
+
+                    <div class="reference-box">
+                        <div class="reference-title">ROI of Error Reduction Programs</div>
+                        <div class="roi-item">
+                            <div class="roi-item-name">✓ AI Vision Inspection</div>
+                            <div class="roi-item-details"><span class="roi-highlight">$150-250K/yr</span> savings | 6-18 mo payback</div>
+                        </div>
+                        <div class="roi-item">
+                            <div class="roi-item-name">✓ Digital Work Instructions</div>
+                            <div class="roi-item-details"><span class="roi-highlight">$75-150K/yr</span> savings | 3-12 mo payback</div>
+                        </div>
+                        <div class="roi-item">
+                            <div class="roi-item-name">✓ Operator Training Program</div>
+                            <div class="roi-item-details"><span class="roi-highlight">$100-200K/yr</span> savings | 3-6 mo payback</div>
+                        </div>
+                        <div class="roi-item">
+                            <div class="roi-item-name">✓ Predictive Maintenance</div>
+                            <div class="roi-item-details"><span class="roi-highlight">$200-300K/yr</span> savings | 4-8 mo payback</div>
+                        </div>
+                        <div class="roi-item">
+                            <div class="roi-item-name">✓ Process Automation</div>
+                            <div class="roi-item-details"><span class="roi-highlight">$300-600K/yr</span> savings | 6-24 mo payback</div>
+                        </div>
+                        <div class="roi-item">
+                            <div class="roi-item-name">✓ Quality Management System</div>
+                            <div class="roi-item-details"><span class="roi-highlight">$200-400K/yr</span> savings | 3-12 mo payback</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div style="margin-bottom: 15px; padding: 15px 0; border-bottom: 1px solid #ddd;">
+                <img src="https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/5cf50f80-731b-4909-b606-2c3189c177aa" alt="Onestar LLC Logo" style="height: 50px; margin-bottom: 10px;">
+                <p style="margin: 8px 0;"><strong>Contact:</strong> Email: <a href="mailto:mhunter@onestartx.com" style="color: #d4af37; text-decoration: none;">mhunter@onestartx.com</a> | Phone: <a href="tel:(972)%20977-6781" style="color: #d4af37; text-decoration: none;">(972) 977-6781</a></p>
+            </div>
+            <p><strong>Data Source:</strong> Based on 2024-2025 manufacturing research (Siemens, Fluke, ASQ, ETQ, FDA)</p>
+            <p><strong>Methodology:</strong> Industry-specific multipliers applied to facility size. See detailed methodology for calculation details.</p>
+        </div>
+    </div>
+
+    <script>
+        const costData = {
+            small: {
+                automotive: { total: 45000, revenue: 3500000, downtime: 18000, rework: 15750, recall: 6750, loss: 4500 },
+                electronics: { total: 38000, revenue: 3500000, downtime: 15200, rework: 13300, recall: 5700, loss: 3800 },
+                chemical: { total: 32000, revenue: 3500000, downtime: 12800, rework: 11200, recall: 4800, loss: 3200 },
+                food: { total: 28000, revenue: 3500000, downtime: 11200, rework: 9800, recall: 4200, loss: 2800 },
+                consumer: { total: 24000, revenue: 3500000, downtime: 9600, rework: 8400, recall: 3600, loss: 2400 },
+                hightech: { total: 42000, revenue: 3500000, downtime: 16800, rework: 14700, recall: 6300, loss: 4200 }
+            },
+            midSmall: {
+                automotive: { total: 185000, revenue: 10000000, downtime: 74000, rework: 64750, recall: 27750, loss: 18500 },
+                electronics: { total: 156000, revenue: 10000000, downtime: 62400, rework: 54600, recall: 23400, loss: 15600 },
+                chemical: { total: 128000, revenue: 10000000, downtime: 51200, rework: 44800, recall: 19200, loss: 12800 },
+                food: { total: 112000, revenue: 10000000, downtime: 44800, rework: 39200, recall: 16800, loss: 11200 },
+                consumer: { total: 98000, revenue: 10000000, downtime: 39200, rework: 34300, recall: 14700, loss: 9800 },
+                hightech: { total: 168000, revenue: 10000000, downtime: 67200, rework: 58800, recall: 25200, loss: 16800 }
+            },
+            midLarge: {
+                automotive: { total: 850000, revenue: 32500000, downtime: 340000, rework: 297500, recall: 127500, loss: 85000 },
+                electronics: { total: 720000, revenue: 32500000, downtime: 288000, rework: 252000, recall: 108000, loss: 72000 },
+                chemical: { total: 580000, revenue: 32500000, downtime: 232000, rework: 203000, recall: 87000, loss: 58000 },
+                food: { total: 510000, revenue: 32500000, downtime: 204000, rework: 178500, recall: 76500, loss: 51000 },
+                consumer: { total: 445000, revenue: 32500000, downtime: 178000, rework: 155750, recall: 66750, loss: 44500 },
+                hightech: { total: 765000, revenue: 32500000, downtime: 306000, rework: 267750, recall: 114750, loss: 76500 }
+            },
+            large: {
+                automotive: { total: 2450000, revenue: 100000000, downtime: 980000, rework: 857500, recall: 367500, loss: 245000 },
+                electronics: { total: 2080000, revenue: 100000000, downtime: 832000, rework: 728000, recall: 312000, loss: 208000 },
+                chemical: { total: 1680000, revenue: 100000000, downtime: 672000, rework: 588000, recall: 252000, loss: 168000 },
+                food: { total: 1470000, revenue: 100000000, downtime: 588000, rework: 514500, recall: 220500, loss: 147000 },
+                consumer: { total: 1285000, revenue: 100000000, downtime: 514000, rework: 449750, recall: 192750, loss: 128500 },
+                hightech: { total: 2210000, revenue: 100000000, downtime: 884000, rework: 773500, recall: 331500, loss: 221000 }
+            }
+        };
+
+        const industryMap = {
+            'automotive': 'automotive',
+            'electronics': 'electronics',
+            'chemical': 'chemical',
+            'food': 'food',
+            'consumer': 'consumer',
+            'hightech': 'hightech'
+        };
+
+        const facilityMap = {
+            'small': 'small',
+            'midSmall': 'midSmall',
+            'midLarge': 'midLarge',
+            'large': 'large'
+        };
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+
+        function calculateAndDisplay() {
+            const facilitySize = document.getElementById('facilitySize').value;
+            const industry = document.getElementById('industry').value;
+
+            if (!facilitySize || !industry) {
+                document.getElementById('resultsSection').style.display = 'none';
+                return;
+            }
+
+            const data = costData[facilityMap[facilitySize]][industryMap[industry]];
+
+            document.getElementById('totalCost').textContent = formatCurrency(data.total);
+            document.getElementById('downtimeCost').textContent = formatCurrency(data.downtime);
+            document.getElementById('reworkCost').textContent = formatCurrency(data.rework);
+            document.getElementById('recallCost').textContent = formatCurrency(data.recall);
+            document.getElementById('lossCost').textContent = formatCurrency(data.loss);
+
+            const percentRevenue = ((data.total / data.revenue) * 100).toFixed(2);
+            document.getElementById('percentRevenue').textContent = `${percentRevenue}% of annual revenue`;
+
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        document.getElementById('facilitySize').addEventListener('change', calculateAndDisplay);
+        document.getElementById('industry').addEventListener('change', calculateAndDisplay);
+    </script>
+</body>
+</html>
